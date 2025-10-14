@@ -32,7 +32,17 @@ public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implemen
                     .build();
             log.info("Начинаю отправку сообщений {} в топик {}", avroEvent, topic);
 
-            ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(topic, avroEvent);
+            long eventTimestamp = hubEvent.getTimestamp().toEpochMilli();
+            String eventKey = hubEvent.getHubId();
+
+            ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
+                    topic,            // топик
+                    null,             // партиция (Kafka сама определит по ключу)
+                    eventTimestamp,   // timestamp события
+                    eventKey,         // ключ (hubId)
+                    avroEvent         // значение (Avro объект)
+            );
+
             producer.send(record, (metadata, exception) -> {
                 if (exception != null) {
                     log.error("Ошибка отправки сообщения в топик {}", topic, exception);

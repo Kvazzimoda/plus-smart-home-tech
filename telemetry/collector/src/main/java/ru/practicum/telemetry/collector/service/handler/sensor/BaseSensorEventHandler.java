@@ -31,9 +31,19 @@ public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> imple
                     .setTimestamp(sensorEvent.getTimestamp())
                     .setPayload(specificAvroEvent)
                     .build();
+
+            long eventTimestamp = sensorEvent.getTimestamp().toEpochMilli();
+            String eventKey = sensorEvent.getHubId();
+
             log.info("Начинаю отправку сообщений {} в топик {}", avroEvent, topic);
 
-            ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(topic, avroEvent);
+            ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
+                    topic,             // имя топика
+                    null,              // партиция (Kafka выберет по ключу)
+                    eventTimestamp,    // timestamp события
+                    eventKey,          // ключ (hubId)
+                    avroEvent          // payload
+            );
             producer.send(record, (metadata, exception) -> {
                 if (exception != null) {
                     log.error("Ошибка отправки сообщения в топик {}", topic, exception);
