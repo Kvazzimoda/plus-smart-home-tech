@@ -1,61 +1,46 @@
 package ru.practicum.telemetry.collector.service.handler.hub;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import ru.practicum.telemetry.collector.model.hub.HubEvent;
 import ru.practicum.telemetry.collector.service.KafkaEventProducer;
 import ru.practicum.telemetry.collector.service.handler.HubEventHandler;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 
+import java.time.Instant;
+
+import static ru.practicum.telemetry.collector.configuration.KafkaProducerProperties.TopicType.HUBS_EVENTS;
+
 @Slf4j
+@RequiredArgsConstructor
 public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implements HubEventHandler {
 
-    protected final KafkaEventProducer kafkaEventProducer;
-    protected final String topic;
+    protected final KafkaEventProducer producer;
 
-    public BaseHubEventHandler(KafkaEventProducer kafkaEventProducer, String topic) {
-        this.kafkaEventProducer = kafkaEventProducer;
-        this.topic = topic;
-    }
+    protected abstract T mapToAvro(HubEventProto hubEvent);
 
     @Override
-    public void handle(HubEvent hubEvent) {
-        try {
-            Producer<String, SpecificRecordBase> producer = kafkaEventProducer.getProducer();
-            T specificAvroEvent = mapToAvro(hubEvent);
-            HubEventAvro avroEvent = HubEventAvro.newBuilder()
-                    .setHubId(hubEvent.getHubId())
-                    .setTimestamp(hubEvent.getTimestamp())
-                    .setPayload(specificAvroEvent)
-                    .build();
-            log.info("Начинаю отправку сообщений {} в топик {}", avroEvent, topic);
-
-            long eventTimestamp = hubEvent.getTimestamp().toEpochMilli();
-            String eventKey = hubEvent.getHubId();
-
-            ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
-                    topic,            // топик
-                    null,             // партиция (Kafka сама определит по ключу)
-                    eventTimestamp,   // timestamp события
-                    eventKey,         // ключ (hubId)
-                    avroEvent         // значение (Avro объект)
-            );
-
-            producer.send(record, (metadata, exception) -> {
-                if (exception != null) {
-                    log.error("Ошибка отправки сообщения в топик {}", topic, exception);
-                } else {
-                    log.info("Сообщение отправлено в топик {} partition {} offset {}",
-                            topic, metadata.partition(), metadata.offset());
-                }
-            });
-            producer.flush();
-        } catch (Exception e) {
-            log.error("Ошибка обработки события", e);
+    public void handle(HubEventProto event) {
+        // Проверка соответствия типа события ожидаемому типу обработчика
+        if (!event.getPayloadCase().equals(getMessageType())) {
+            throw new IllegalArgumentException("Неизвестный тип события: " + event.getPayloadCase());
         }
-    }
 
-    protected abstract T mapToAvro(HubEvent hubEvent);
+        // Преобразование события в Avro-запись
+        T payload = mapToAvro(event);
+
+        Instant timestamp = Instant.ofEpochSecond(
+                event.getTimestamp().getSeconds(),
+                event.getTimestamp().getNanos()
+        );
+
+        HubEventAvro eventAvro = HubEventAvro.newBuilder()
+                .setHubId(event.getHubId())
+                .setTimestamp(timestamp)
+                .setPayload(payload)
+                .build();
+
+        producer.send(eventAvro, event.getHubId(), timestamp, HUBS_EVENTS);
+    }
 }

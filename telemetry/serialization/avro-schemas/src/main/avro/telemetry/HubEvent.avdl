@@ -44,28 +44,33 @@ protocol HubEventProtocol {
 		string sensor_id;
 		ConditionTypeAvro type;
 		ConditionOperationAvro operation;
-		union{null, int} value;
+		union { null, int, boolean } value = null;
 	}
 
 	record DeviceActionAvro {
-		string sensor_id;
+		string sensor_id; // идентификатор устройства
 		ActionTypeAvro type;
-		union{null, int} value;
+		int? value = null;
 	}
 
 	record ScenarioAddedEventAvro {
-		string name;
-		array<ScenarioConditionAvro> conditions;
-		array<DeviceActionAvro> actions;
+		string name; // название сценария уникальное в рамках хаба
+		array<ScenarioConditionAvro> conditions; // набор условий активации сценария
+		array<DeviceActionAvro> actions; // набор действий при активации сценария
 	}
 
 	record ScenarioRemovedEventAvro {
-		string name;
+		string name; // название сценария уникальное в рамках хаба
 	}
 
 	record HubEventAvro {
 		string hub_id;
 		timestamp_ms timestamp;
-		union{DeviceAddedEventAvro, DeviceRemovedEventAvro, ScenarioAddedEventAvro, ScenarioRemovedEventAvro} payload;
+		union {
+			DeviceAddedEventAvro,
+			DeviceRemovedEventAvro,
+			ScenarioAddedEventAvro,
+			ScenarioRemovedEventAvro
+		} payload;
 	}
 }
