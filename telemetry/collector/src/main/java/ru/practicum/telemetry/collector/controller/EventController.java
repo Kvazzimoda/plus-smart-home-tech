@@ -1,28 +1,26 @@
 package ru.practicum.telemetry.collector.controller;
 
-import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import ru.practicum.telemetry.collector.service.handler.HubEventHandler;
+import com.google.protobuf.Empty;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.server.service.GrpcService;
+import ru.yandex.practicum.grpc.telemetry.collector.CollectorControllerGrpc;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.practicum.telemetry.collector.service.handler.SensorEventHandler;
-import ru.practicum.telemetry.collector.model.hub.HubEvent;
-import ru.practicum.telemetry.collector.model.hub.HubEventType;
-import ru.practicum.telemetry.collector.model.sensor.SensorEvent;
-import ru.practicum.telemetry.collector.model.sensor.SensorEventType;
+import ru.practicum.telemetry.collector.service.handler.HubEventHandler;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Slf4j
-@RestController
-@RequestMapping("/events")
-public class EventController {
 
-    private final Map<SensorEventType, SensorEventHandler> sensorEventHandlers;
-    private final Map<HubEventType, HubEventHandler> hubEventHandlers;
+@GrpcService
+public class EventController extends CollectorControllerGrpc.CollectorControllerImplBase {
+    private final Map<SensorEventProto.PayloadCase, SensorEventHandler> sensorEventHandlers;
+    private final Map<HubEventProto.PayloadCase, HubEventHandler> hubEventHandlers;
 
     public EventController(Set<SensorEventHandler> sensorEventHandlers, Set<HubEventHandler> hubEventHandlers) {
         this.sensorEventHandlers = sensorEventHandlers.stream()
@@ -31,27 +29,43 @@ public class EventController {
                 .collect(Collectors.toMap(HubEventHandler::getMessageType, Function.identity()));
     }
 
-    @PostMapping("/sensors")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public void collectSensorEvent(@Valid @RequestBody SensorEvent request) {
-        log.info("json: {}", request.toString());
-        SensorEventHandler sensorEventHandler = sensorEventHandlers.get(request.getType());
-        if (sensorEventHandler == null) {
-            throw new IllegalArgumentException("Подходящий обработчик для события датчика " + request.getType() +
-                    " не найден");
+    // метод для обработки событий от датчиков
+    @Override
+    public void collectSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
+        try {
+            // проверяем есть ли обработчик для полученного события
+            if (sensorEventHandlers.containsKey(request.getPayloadCase())) {
+                // если обработчик найден - передаём событие ему на обработку
+                sensorEventHandlers.get(request.getPayloadCase()).handle(request);
+            } else {
+                throw new IllegalArgumentException("Нет обработчика для события " + request.getPayloadCase());
+            }
+
+            // ответ клиенту
+            responseObserver.onNext(Empty.getDefaultInstance());
+            // завершаем обработку запроса
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(new StatusRuntimeException(Status.fromThrowable(e)));
         }
-        sensorEventHandler.handle(request);
     }
 
-    @PostMapping("/hubs")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public void collectHubEvent(@Valid @RequestBody HubEvent request) {
-        log.info("json: {}", request.toString());
-        HubEventHandler hubEventHandler = hubEventHandlers.get(request.getType());
-        if (hubEventHandler == null) {
-            throw new IllegalArgumentException("Подходящий обработчик для события хаба " + request.getType() +
-                    " не найден");
+    // метод для обработки событий от хаба
+    @Override
+    public void collectHubEvent(HubEventProto request, StreamObserver<Empty> responseObserver){
+        try {
+            // всё по аналогии с датчиками
+            if (hubEventHandlers.containsKey(request.getPayloadCase())) {
+                hubEventHandlers.get(request.getPayloadCase()).handle(request);
+            } else {
+                throw new IllegalArgumentException("Нет обработчика для события " + request.getPayloadCase());
+            }
+
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(new StatusRuntimeException(Status.fromThrowable(e)));
         }
-        hubEventHandler.handle(request);
     }
+
 }

@@ -1,31 +1,28 @@
 package ru.practicum.telemetry.collector.service.handler.hub;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import ru.practicum.telemetry.collector.model.hub.DeviceRemovedEvent;
-import ru.practicum.telemetry.collector.model.hub.HubEvent;
-import ru.practicum.telemetry.collector.model.hub.HubEventType;
+import org.springframework.stereotype.Component;
 import ru.practicum.telemetry.collector.service.KafkaEventProducer;
+import ru.yandex.practicum.grpc.telemetry.event.DeviceRemovedEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.DeviceRemovedEventAvro;
 
-@Service
+@Component
 public class DeviceRemovedHubEventHandler extends BaseHubEventHandler<DeviceRemovedEventAvro> {
 
-    public DeviceRemovedHubEventHandler(KafkaEventProducer kafkaEventProducer,
-                                        @Value("${kafka.topic.hub}") String topic) {
-        super(kafkaEventProducer, topic);
+    public DeviceRemovedHubEventHandler(KafkaEventProducer producer) {
+        super(producer);
     }
 
     @Override
-    protected DeviceRemovedEventAvro mapToAvro(HubEvent hubEvent) {
-        DeviceRemovedEvent event = (DeviceRemovedEvent) hubEvent;
+    public HubEventProto.PayloadCase getMessageType() {
+        return HubEventProto.PayloadCase.DEVICE_REMOVED_PROTO;
+    }
+
+    @Override
+    protected DeviceRemovedEventAvro mapToAvro(HubEventProto event) {
+        DeviceRemovedEventProto payload = event.getDeviceRemovedProto();
         return DeviceRemovedEventAvro.newBuilder()
-                .setId(event.getId())
+                .setId(payload.getId())
                 .build();
-    }
-
-    @Override
-    public HubEventType getMessageType() {
-        return HubEventType.DEVICE_REMOVED_EVENT;
     }
 }

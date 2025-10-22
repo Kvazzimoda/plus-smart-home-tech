@@ -1,34 +1,30 @@
 package ru.practicum.telemetry.collector.service.handler.sensor;
 
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import ru.practicum.telemetry.collector.model.sensor.ClimateSensorEvent;
-import ru.practicum.telemetry.collector.model.sensor.SensorEvent;
-import ru.practicum.telemetry.collector.model.sensor.SensorEventType;
+import org.springframework.stereotype.Component;
 import ru.practicum.telemetry.collector.service.KafkaEventProducer;
+import ru.yandex.practicum.grpc.telemetry.event.ClimateSensorProto;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.ClimateSensorAvro;
 
-@Service
+@Component
 public class ClimateSensorEventHandler extends BaseSensorEventHandler<ClimateSensorAvro> {
 
-    public ClimateSensorEventHandler(KafkaEventProducer kafkaEventProducer,
-                                     @Value("${kafka.topic.sensor}") String topic) {
-        super(kafkaEventProducer, topic);
+    public ClimateSensorEventHandler(KafkaEventProducer producer) {
+        super(producer);
     }
 
     @Override
-    public SensorEventType getMessageType() {
-        return SensorEventType.CLIMATE_SENSOR_EVENT;
+    public SensorEventProto.PayloadCase getMessageType() {
+        return SensorEventProto.PayloadCase.CLIMATE_SENSOR_PROTO;
     }
 
     @Override
-    protected ClimateSensorAvro mapToAvro(SensorEvent sensorEvent) {
-        ClimateSensorEvent event = (ClimateSensorEvent) sensorEvent;
+    protected ClimateSensorAvro mapToAvro(SensorEventProto event) {
+        ClimateSensorProto payload = event.getClimateSensorProto();
         return ClimateSensorAvro.newBuilder()
-                .setTemperatureC(event.getTemperatureC())
-                .setHumidity(event.getHumidity())
-                .setCo2Level(event.getCo2Level())
+                .setCo2Level(payload.getCo2Level())
+                .setHumidity(payload.getHumidity())
+                .setTemperatureC(payload.getTemperatureC())
                 .build();
     }
 }
