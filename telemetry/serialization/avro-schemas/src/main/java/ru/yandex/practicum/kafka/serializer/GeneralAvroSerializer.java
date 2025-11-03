@@ -11,10 +11,19 @@ import org.apache.kafka.common.serialization.Serializer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+@SuppressWarnings("unused")
 public class GeneralAvroSerializer implements Serializer<SpecificRecordBase> {
 
-    private final EncoderFactory encoderFactory = EncoderFactory.get();
+    private final EncoderFactory encoderFactory;
     private BinaryEncoder encoder;
+
+    public GeneralAvroSerializer() {
+        this(EncoderFactory.get());
+    }
+
+    public GeneralAvroSerializer(EncoderFactory encoderFactory) {
+        this.encoderFactory = encoderFactory;
+    }
 
     @Override
     public byte[] serialize(String topic, SpecificRecordBase data) {
