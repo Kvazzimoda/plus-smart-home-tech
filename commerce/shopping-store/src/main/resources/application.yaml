@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: shopping-store
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      # Не задавать параметры компонента, по умолчанию конфигурация
+      fail-fast: true
+      # ecu config-server недоступен - сразу чеково поведение
+      retry:
+        # случайный синхронный backoff между попытками
+        useRandomPolicy: true
+        # максимальный интервал между попытками (6000 миллисекунд = 6 сек)
+        max-interval: 6000
+      discovery:
+        enabled: true
+        service-id: config-server
+  eureka:
+    client:
+      serviceUrl:
+        defaultZone: http://localhost:8761/eureka/
+      instance:
+        preferIpAddress: true
+        hostname: localhost
+        instance-id: "${spring.application.name}:${random.value}"
+      leaseRenewalIntervalInSeconds: 10
+
+logging:
+  file:
+    name: logs/shopping-cart.log

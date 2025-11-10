@@ -11,5 +11,22 @@
 
     <artifactId>infra</artifactId>
     <packaging>pom</packaging>
+    <modules>
+        <module>discovery-server</module>
+        <module>config-server</module>
+    </modules>
 
+    <dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot</artifactId>
+        <version>3.2.0</version> <!-- Укажите вашу версию -->
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-autoconfigure</artifactId>
+        <version>3.2.0</version> <!-- Укажите вашу версию -->
+    </dependency>
+    </dependencies>
 </project>

@@ -1,0 +1,29 @@
+spring:
+  sql:
+    init:
+      mode: always
+  # DB connection
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/commerce_shopping_store
+    username: postgres
+    password: postgres
+    initialization-mode: always
+  jpa:
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc.time_zone: UTC
+        format_sql: true
+  hibernate:
+    ddl-auto: update
+    show-sql: false
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+        alphanumeric-ids:
+          enabled: true
+server:
+  port: 0
