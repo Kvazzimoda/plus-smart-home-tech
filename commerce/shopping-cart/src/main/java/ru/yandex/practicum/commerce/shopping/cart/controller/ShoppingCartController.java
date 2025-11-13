@@ -1,16 +1,11 @@
 package ru.yandex.practicum.commerce.shopping.cart.controller;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.interaction.client.shopping.cart.ShoppingCartOperations;
 import ru.yandex.practicum.commerce.interaction.client.shopping.cart.exception.ChangeProductQuantityRequest;
-import ru.yandex.practicum.commerce.interaction.client.shopping.cart.exception.NotAuthorizedUserException;
 import ru.yandex.practicum.commerce.interaction.dto.shopping.cart.ShoppingCartDto;
 import ru.yandex.practicum.commerce.shopping.cart.service.ShoppingCartService;
 

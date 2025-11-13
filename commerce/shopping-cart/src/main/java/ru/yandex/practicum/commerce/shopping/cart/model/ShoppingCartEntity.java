@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "shopping_cart")
+@Table(name = "shopping_carts")
 @Setter
 @Getter
 @EqualsAndHashCode(of = {"shoppingCartId"})
