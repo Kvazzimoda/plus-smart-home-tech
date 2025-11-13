@@ -24,34 +24,36 @@ public class WarehouseController implements WarehouseOperations {
     private final WarehouseService warehouseService;
 
     @Override
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping
-    public void newProductInWarehouse(@Valid @RequestBody NewProductInWarehouseRequest request) {
-        log.info("Adding new product to warehouse: productId={}", request.getProductId());
+    public void newProductInWarehouse(@RequestBody NewProductInWarehouseRequest request) {
+        log.debug("Adding new product to warehouse: {}", request);
         warehouseService.newProductInWarehouse(request);
+        log.debug("New product added to warehouse successfully");
     }
 
     @Override
     @PostMapping("/check")
-    public BookedProductsDto checkAvailability(
-            @Valid @RequestBody ShoppingCartDto shoppingCartDto) {
-        log.info("Checking quantity for {} products in cart", shoppingCartDto);
-        return warehouseService.checkAvailability(shoppingCartDto);
+    public BookedProductsDto checkProductQuantityEnoughForShoppingCart(@RequestBody ShoppingCartDto shoppingCartDto) {
+        log.debug("Checking product quantity for shopping cart: {}", shoppingCartDto);
+        BookedProductsDto result = warehouseService.checkProductQuantityEnoughForShoppingCart(shoppingCartDto);
+        log.debug("Product quantity check completed: {}", result);
+        return result;
     }
 
     @Override
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/add")
-    public void addProductToWarehouse(@Valid @RequestBody AddProductToWarehouseRequest request) {
-        log.info("Increasing stock: productId={}, quantity={}", request.getProductId(), request.getQuantity());
+    public void addProductToWarehouse(@RequestBody AddProductToWarehouseRequest request) {
+        log.debug("Adding product quantity to warehouse: {}", request);
         warehouseService.addProductToWarehouse(request);
+        log.debug("Product quantity added to warehouse successfully");
     }
 
     @Override
     @GetMapping("/address")
     public AddressDto getWarehouseAddress() {
-        log.info("Fetching warehouse address");
-        return warehouseService.getWarehouseAddress();
+        log.debug("Requesting warehouse address");
+        AddressDto address = warehouseService.getWarehouseAddress();
+        log.debug("Return warehouse address: {}", address);
+        return address;
     }
 }
-

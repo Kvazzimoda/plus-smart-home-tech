@@ -55,7 +55,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         // Проверяем доступность товаров на складе через Feign клиент
         try {
-            warehouseClient.checkAvailability(tempCart);
+            warehouseClient.checkProductQuantityEnoughForShoppingCart(tempCart);
             log.debug("Products availability confirmed by warehouse");
         } catch (Exception e) {
             log.error("Failed to check product availability in warehouse: {}", e.getMessage());

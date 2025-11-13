@@ -7,7 +7,7 @@ import ru.yandex.practicum.commerce.interaction.dto.warehouse.BookedProductsDto;
 @Component
 public class WarehouseClientFallback  implements WarehouseClient {
     @Override
-    public BookedProductsDto checkAvailability(ShoppingCartDto shoppingCartDto) {
+    public BookedProductsDto checkProductQuantityEnoughForShoppingCart(ShoppingCartDto shoppingCartDto) {
         throw new RuntimeException("Warehouse service is unavailable");
     }
 }

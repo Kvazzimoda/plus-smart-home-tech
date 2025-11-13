@@ -49,7 +49,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
-    public BookedProductsDto checkAvailability(ShoppingCartDto shoppingCartDto) {
+    public BookedProductsDto checkProductQuantityEnoughForShoppingCart(ShoppingCartDto shoppingCartDto) {
         log.debug("Checking product quantity for shopping cart: {}", shoppingCartDto.getShoppingCartId());
 
         Map<UUID, Integer> insufficientProducts = new HashMap<>();
@@ -68,6 +68,7 @@ public class WarehouseServiceImpl implements WarehouseService {
                 insufficientProducts.put(productId, requiredQuantity - product.getQuantity().intValue());
             }
 
+            // Рассчитываем общие характеристики
             if (product.getWeight() != null) {
                 totalWeight += product.getWeight() * requiredQuantity;
             }
@@ -98,12 +99,11 @@ public class WarehouseServiceImpl implements WarehouseService {
     public void addProductToWarehouse(AddProductToWarehouseRequest request) {
         log.debug("Adding product quantity to warehouse: {}", request.getProductId());
 
-        // Берём с блокировкой (исключает race conditions)
-        WarehouseProductEntity product = warehouseProductRepository.lockByProductId(request.getProductId())
+        WarehouseProductEntity product = warehouseProductRepository.findByProductId(request.getProductId())
                 .orElseThrow(() -> new NoSpecifiedProductInWarehouseBusinessException(request.getProductId()));
 
         product.setQuantity(product.getQuantity() + request.getQuantity());
-        // save() не обязателен — транзакция сама сделает flush
+        warehouseProductRepository.save(product);
 
         log.info("Product quantity updated for: {}, new quantity: {}", request.getProductId(), product.getQuantity());
     }
@@ -112,6 +112,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     public AddressDto getWarehouseAddress() {
         log.debug("Getting warehouse address: {}", CURRENT_ADDRESS);
 
+        // Дублируем адрес во все поля
         return AddressDto.builder()
                 .country(CURRENT_ADDRESS)
                 .city(CURRENT_ADDRESS)

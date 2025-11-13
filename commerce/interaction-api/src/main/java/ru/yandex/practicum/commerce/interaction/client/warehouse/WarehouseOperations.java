@@ -10,7 +10,7 @@ public interface WarehouseOperations {
 
     void newProductInWarehouse(NewProductInWarehouseRequest request);
 
-    BookedProductsDto checkAvailability(ShoppingCartDto shoppingCartDto);
+    BookedProductsDto checkProductQuantityEnoughForShoppingCart(ShoppingCartDto shoppingCartDto);
 
     void addProductToWarehouse(AddProductToWarehouseRequest request);
 
