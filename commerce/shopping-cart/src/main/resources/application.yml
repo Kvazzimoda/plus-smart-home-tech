@@ -12,6 +12,18 @@ spring:
       discovery:
         enabled: true
         serviceId: config-server
+  # КОНФИГУРАЦИЯ КЕШИРОВАНИЯ ДЛЯ SHOPPING-CART
+  cache:
+    type: caffeine  # Используем Caffeine (in-memory кеш)
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5m,expireAfterAccess=10m,recordStats
+    cache-names:
+      - shopping-carts       # Для корзин пользователей
+      - cart-items           # Для товаров в корзине
+      - user-active-carts    # Для активных корзин пользователей
+      - product-availability # Для проверки доступности товаров
+      - cart-totals          # Для расчетов итоговой стоимости
+
 
 eureka:
   client:

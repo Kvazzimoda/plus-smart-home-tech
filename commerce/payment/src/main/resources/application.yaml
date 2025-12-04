@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: payment
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      fail-fast: true
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
+      discovery:
+        enabled: true
+        serviceId: config-server
+  # КОНФИГУРАЦИЯ КЕШИРОВАНИЯ ДЛЯ PAYMENT
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=30m,expireAfterAccess=1h,recordStats
+    cache:
+      caffeine:
+        spec:
+          # Разные настройки для разных кешей
+          payments: maximumSize=500,expireAfterWrite=30m,expireAfterAccess=1h
+          payment-methods: maximumSize=200,expireAfterWrite=1h,expireAfterAccess=2h
+          transaction-status: maximumSize=1000,expireAfterWrite=5m,expireAfterAccess=10m
+          payment-sessions: maximumSize=1000,expireAfterWrite=15m,expireAfterAccess=30m
+          refunds: maximumSize=200,expireAfterWrite=1h
+          payment-gateways: maximumSize=50,expireAfterWrite=24h
+          order-calculations: maximumSize=1000,expireAfterWrite=10m,expireAfterAccess=20m
+          product-prices: maximumSize=5000,expireAfterWrite=5m,expireAfterAccess=15m
+    cache-names:
+      - payments
+      - payment-methods
+      - transaction-status
+      - payment-sessions
+      - refunds
+      - payment-gateways
+      - order-calculations
+      - product-prices
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/

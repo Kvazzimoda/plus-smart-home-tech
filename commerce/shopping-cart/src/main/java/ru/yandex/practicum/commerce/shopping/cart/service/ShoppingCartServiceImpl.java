@@ -2,6 +2,10 @@ package ru.yandex.practicum.commerce.shopping.cart.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.interaction.client.shopping.cart.exception.ChangeProductQuantityRequest;
@@ -29,7 +33,14 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private final ShoppingCartItemRepository shoppingCartItemRepository;
     private final WarehouseClient warehouseClient;
 
+    // Константы для имен кешей
+    private static final String CART_CACHE = "shopping-carts";
+    private static final String CART_ITEMS_CACHE = "cart-items";
+    private static final String USER_ACTIVE_CART_CACHE = "user-active-carts";
+    private static final String PRODUCT_AVAILABILITY_CACHE = "product-availability";
+
     @Override
+    @Cacheable(value = CART_CACHE, key = "#username", unless = "#result == null")
     public ShoppingCartDto getShoppingCart(String username) {
         validateUsername(username);
         log.debug("Getting shopping cart for user: {}", username);
@@ -42,7 +53,17 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     @Transactional
-    public ShoppingCartDto addProductToShoppingCart(String username, Map<UUID, Integer> products) {
+    @Caching(
+            evict = {
+                    @CacheEvict(value = CART_CACHE, key = "#username"),
+                    @CacheEvict(value = CART_ITEMS_CACHE, key = "#username"),
+                    @CacheEvict(value = USER_ACTIVE_CART_CACHE, key = "#username")
+            },
+            put = {
+                    @CachePut(value = CART_CACHE, key = "#username")
+            }
+    )
+    public ShoppingCartDto addProductToShoppingCart(String username, Map<UUID, Long> products) {
         validateUsername(username);
         log.debug("Adding products to cart for user: {}, products: {}", username, products);
         ShoppingCartEntity shoppingCart = getOrCreateActiveCart(username);
@@ -62,9 +83,9 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             throw new RuntimeException("Product availability check failed: " + e.getMessage(), e);
         }
 
-        for (Map.Entry<UUID, Integer> entry : products.entrySet()) {
+        for (Map.Entry<UUID, Long> entry : products.entrySet()) {
             UUID productId = entry.getKey();
-            Integer quantity = entry.getValue();
+            Long quantity = entry.getValue();
 
             Optional<ShoppingCartItemEntity> existingItem = shoppingCartItemRepository
                     .findByShoppingCart_ShoppingCartIdAndProductId(shoppingCart.getShoppingCartId(), productId);
@@ -91,6 +112,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {CART_CACHE, CART_ITEMS_CACHE, USER_ACTIVE_CART_CACHE}, key = "#username")
     public void deactivateCurrentShoppingCart(String username) {
         validateUsername(username);
         log.debug("Deactivating shopping cart for user: {}", username);
@@ -110,6 +132,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = CART_CACHE, key = "#username"),
+                    @CacheEvict(value = CART_ITEMS_CACHE, key = "#username")
+            },
+            put = {
+                    @CachePut(value = CART_CACHE, key = "#username")
+            }
+    )
     public ShoppingCartDto removeFromShoppingCart(String username, List<UUID> productIds) {
         validateUsername(username);
         log.debug("Removing products from cart for user: {}, productIds: {}", username, productIds);
@@ -144,6 +175,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = CART_CACHE, key = "#username"),
+                    @CacheEvict(value = CART_ITEMS_CACHE, key = "#username")
+            },
+            put = {
+                    @CachePut(value = CART_CACHE, key = "#username")
+            }
+    )
     public ShoppingCartDto changeProductQuantity(String username, ChangeProductQuantityRequest request) {
         validateUsername(username);
         log.debug("Changing product quantity for user: {}, request: {}", username, request);
@@ -158,7 +198,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         }
 
         ShoppingCartItemEntity item = existingItem.get();
-        item.setQuantity(request.getNewQuantity().intValue());
+        item.setQuantity((long) request.getNewQuantity().intValue());
         shoppingCartItemRepository.save(item);
 
         log.debug("Changed quantity for product {} to {}", request.getProductId(), request.getNewQuantity());

@@ -11,7 +11,7 @@ public interface ShoppingCartService {
 
     ShoppingCartDto getShoppingCart(String username);
 
-    ShoppingCartDto addProductToShoppingCart(String username, Map<UUID, Integer> products);
+    ShoppingCartDto addProductToShoppingCart(String username, Map<UUID, Long> products);
 
     void deactivateCurrentShoppingCart(String username);
 

@@ -70,7 +70,7 @@ public class ProductMapper {
      * Создает новый Entity с минимальными обязательными полями
      */
     public static Product toNewEntity(String productName, String description,
-                                            String productCategory, String price) {
+                                      String productCategory, String price) {
         return Product.builder()
                 .productName(productName)
                 .description(description)
