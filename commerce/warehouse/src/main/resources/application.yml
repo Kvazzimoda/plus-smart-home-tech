@@ -13,7 +13,36 @@ spring:
         enabled: true
         serviceId: config-server
 
+  cache:
+    type: caffeine  # Используем Caffeine как реализацию кеша
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=30m,recordStats
+    cache-names:
+      - products            # Для отдельных продуктов
+      - warehouse-items     # Для списка всех товаров
+      - reservations        # Для бронирований
+      - addresses           # Для адресов склада
+      - product-stock       # Для остатков товаров
+      - categories          # Для категорий
+
 eureka:
   client:
     serviceUrl:
       defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/
+
+logging:
+  level:
+    org.springframework.cache: TRACE  # ИЗМЕНИТЕ С DEBUG НА TRACE
+    org.springframework.cache.interceptor: DEBUG
+    org.springframework.beans: DEBUG
+    com.github.benmanes.caffeine: DEBUG
+    ru.yandex.practicum.commerce.warehouse: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,cache,beans
+  endpoint:
+    cache:
+      enabled: true

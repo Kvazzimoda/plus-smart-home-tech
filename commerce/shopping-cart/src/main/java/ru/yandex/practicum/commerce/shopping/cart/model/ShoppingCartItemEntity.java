@@ -28,7 +28,7 @@ public class ShoppingCartItemEntity {
     private UUID productId;
 
     @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    private Long quantity;
 
     @Version
     private Long version;

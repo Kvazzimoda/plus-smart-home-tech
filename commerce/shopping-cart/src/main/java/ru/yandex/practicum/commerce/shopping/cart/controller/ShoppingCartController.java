@@ -34,7 +34,7 @@ public class ShoppingCartController implements ShoppingCartOperations {
     @Override
     @PutMapping
     public ShoppingCartDto addProductToShoppingCart(@RequestParam String username,
-                                                    @RequestBody Map<UUID, Integer> products) {
+                                                    @RequestBody Map<UUID, Long> products) {
         log.debug("Adding products to cart for user: {}, products: {}", username, products);
         ShoppingCartDto shoppingCart = shoppingCartService.addProductToShoppingCart(username, products);
         log.debug("Return updated shopping cart: {}", shoppingCart);

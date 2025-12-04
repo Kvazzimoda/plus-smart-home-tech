@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 public class ProductInShoppingCartLowQuantityBusinessException extends RuntimeException {
 
-    private final Map<UUID, Integer> insufficientProducts; // productId -> missing quantity
+    private final Map<UUID, Integer> insufficientProducts;
 
     public ProductInShoppingCartLowQuantityBusinessException(Map<UUID, Integer> insufficientProducts) {
         super("Insufficient products in warehouse: " + insufficientProducts);
@@ -19,6 +19,10 @@ public class ProductInShoppingCartLowQuantityBusinessException extends RuntimeEx
     public ProductInShoppingCartLowQuantityBusinessException(Map<UUID, Integer> insufficientProducts, String message) {
         super(message);
         this.insufficientProducts = insufficientProducts;
+    }
+
+    public Map<UUID, Integer> getInsufficientProducts() {
+        return insufficientProducts;
     }
 
 }

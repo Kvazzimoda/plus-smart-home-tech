@@ -22,7 +22,7 @@ public class ShoppingCartClientFallbackFactory implements FallbackFactory<Shoppi
             }
 
             @Override
-            public ShoppingCartDto addProductToShoppingCart(String username, Map<UUID, Integer> products) {
+            public ShoppingCartDto addProductToShoppingCart(String username, Map<UUID, Long> products) {
                 throw new RuntimeException("Shopping-cart service unavailable", cause);
             }
 

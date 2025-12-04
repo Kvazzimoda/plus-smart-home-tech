@@ -22,7 +22,7 @@ public class ShoppingCartMapper {
             return null;
         }
 
-        Map<UUID, Integer> productsMap = items.stream()
+        Map<UUID, Long> productsMap = items.stream()
                 .collect(Collectors.toMap(
                         ShoppingCartItemEntity::getProductId,
                         ShoppingCartItemEntity::getQuantity
@@ -46,7 +46,7 @@ public class ShoppingCartMapper {
     /**
      * Создает новый элемент корзины
      */
-    public static ShoppingCartItemEntity toNewItemEntity(ShoppingCartEntity shoppingCart, UUID productId, Integer quantity) {
+    public static ShoppingCartItemEntity toNewItemEntity(ShoppingCartEntity shoppingCart, UUID productId, Long quantity) {
         return ShoppingCartItemEntity.builder()
                 .shoppingCart(shoppingCart)
                 .productId(productId)
